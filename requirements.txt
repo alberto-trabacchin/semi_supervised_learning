@@ -1,0 +1,9 @@
+numpy
+matplotlib
+scikit-learn
+pathlib
+pandas
+requests
+prettytable
+argparse
+wandb
