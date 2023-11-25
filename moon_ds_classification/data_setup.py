@@ -64,9 +64,9 @@ def create_dataloaders(
     X_train_unlab = torch.FloatTensor(X_train_unlab)
     X_train_lab = torch.FloatTensor(X_train_lab)
     X_test = torch.FloatTensor(X_test)
-    y_train_unlab = torch.LongTensor(y_train_unlab)
-    y_train_lab = torch.LongTensor(y_train_lab)
-    y_test = torch.LongTensor(y_test)
+    y_train_unlab = torch.FloatTensor(y_train_unlab)
+    y_train_lab = torch.FloatTensor(y_train_lab)
+    y_test = torch.FloatTensor(y_test)
 
     # Convert to PyTorch datasets
     train_unlab_dataset = torch.utils.data.TensorDataset(X_train_unlab, y_train_unlab)

@@ -40,11 +40,10 @@ def train_step(
     train_accuracy = 0
     for i, batch_sample in enumerate(data_loader):
         X, y = batch_sample
-        if pseudo_labels is not None:
-            y = pseudo_labels[i]
         X, y = X.to(device), y.to(device)
-        y_pred = model(X)
-        loss = loss_fn(y_pred, y)
+        y_logits = model(X).squeeze()
+        y_pred = torch.round(torch.sigmoid(y_logits))
+        loss = loss_fn(y_logits, y)
         train_loss += loss.item()
         train_accuracy += utils.accuracy(y_pred, y)
         optimizer.zero_grad()
@@ -85,8 +84,9 @@ def test_step(
         for batch_sample in data_loader:
             X, y = batch_sample
             X, y = X.to(device), y.to(device)
-            y_pred = model(X)
-            loss = loss_fn(y_pred, y)
+            y_logits = model(X).squeeze()
+            y_pred = torch.round(torch.sigmoid(y_logits))
+            loss = loss_fn(y_logits, y)
             test_loss += loss.item()
             test_accuracy += utils.accuracy(y_pred, y)
         test_loss /= len(data_loader)
@@ -209,7 +209,7 @@ def get_pseudo_labels(
         for i, batch_sample in enumerate(data_loader):
             X, _ = batch_sample
             X = X.to(device)
-            y_pred = model(X)
-            y_class = torch.softmax(y_pred, dim = 1).argmax(dim = 1)
-            predictions.append(y_class.to("cpu"))
+            y_logits = model(X)
+            y_pred = torch.round(torch.sigmoid(y_logits))
+            predictions.append(y_pred.to("cpu"))
     return predictions
