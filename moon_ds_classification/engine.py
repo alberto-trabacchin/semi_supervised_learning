@@ -4,8 +4,9 @@ from torchvision.transforms import transforms
 from typing import Tuple, Dict, List
 from pathlib import Path
 from tqdm.auto import tqdm
+import wandb
 
-import data_setup, utils
+import utils
 
 
 def train_step(
@@ -182,6 +183,11 @@ def train(
                 test_acc = test_accuracy
             )
             tqdm.write(results_table.get_string())
+        if track_online:
+            wandb.log({f"Train Accuracy {model_name}": train_accuracy,
+                       f"Train Loss {model_name}": train_loss,
+                       f"Test Accuracy {model_name}": test_accuracy,
+                       f"Test Loss {model_name}": test_loss})
     return results
 
 

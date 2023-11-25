@@ -7,6 +7,8 @@ class ModelV1(torch.nn.Module):
         self.fc1 = torch.nn.Sequential(
             torch.nn.Linear(input_size, hidden_size),
             torch.nn.ReLU(),
+            torch.nn.Linear(hidden_size, hidden_size),
+            torch.nn.ReLU(),
             torch.nn.Linear(hidden_size, 1)
         )
 

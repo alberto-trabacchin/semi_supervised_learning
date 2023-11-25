@@ -8,18 +8,19 @@ from matplotlib.ticker import FormatStrFormatter
 import numpy as np
 import pandas as pd
 from torch.utils.data import DataLoader
-import requests
 
-# Download helper functions from Learn PyTorch repo (if not already downloaded)
-if Path("3_classification/helper_functions.py").is_file():
-    print("helper_functions.py already exists, skipping download")
-else:
-    print("Downloading helper_functions.py")
-    request = requests.get("https://raw.githubusercontent.com/mrdbourke/pytorch-deep-learning/main/helper_functions.py")
-    with open("helper_functions.py", "wb") as f:
-        f.write(request.content)
 
-from helper_functions import plot_predictions, plot_decision_boundary
+def print_data_sizes(
+        train_lab_dataloader: DataLoader,
+        train_unlab_dataloader: DataLoader,
+        test_dataloader: DataLoader
+) -> None:
+    train_lab_size = train_lab_dataloader.dataset.tensors[0].shape[0]
+    train_unlab_size = train_unlab_dataloader.dataset.tensors[0].shape[0]
+    test_size = test_dataloader.dataset.tensors[0].shape[0]
+    print(f"Training labeled size: {train_lab_size}")
+    print(f"Training unlabeled size: {train_unlab_size}")
+    print(f"Testing size: {test_size}")
 
 
 def plot_classes_distribution(dataloader: DataLoader, class_names: List[str]) -> None:
@@ -99,7 +100,14 @@ def load_model(name: str, model: torch.nn.Module, model_dir: Path) -> torch.nn.M
     return model
 
 
-def plot_losses(model_results: Dict[str, dict], save_path: Path = None) -> None:
+def plot_losses(
+        model_results: Dict[str, dict],
+        model_name: str,
+        train_lab_size: str,
+        test_size: str,
+        points: int,
+        noise: float,
+        save_path: Path = None) -> None:
     epochs = np.array(model_results["epoch"], dtype = np.int32)
     train_loss = np.array(model_results["train_loss"], dtype = np.float32)
     test_loss = np.array(model_results["test_loss"], dtype = np.float32)
@@ -109,16 +117,18 @@ def plot_losses(model_results: Dict[str, dict], save_path: Path = None) -> None:
     ax.plot(model_results["epoch"], 100 * test_loss, label = "test loss")
     ax.set_xlabel("Epoch")
     ax.set_ylabel("Loss")
-    ax.set_title("Losses")
+    ax.set_title(f"{model_name} - {train_lab_size} train - {test_size} test")
     ax.legend()
-    if save_path is not None:
-        save_path.parent[0].mkdir(parents = True, exist_ok = True)
-        fig.set_size_inches(10, 8)
-        fig.set_dpi(1000)
-        fig.savefig(save_path)
 
 
-def plot_accuracies(model_results: Dict[str, dict], save_name: Path = None) -> None:
+def plot_accuracies(
+        model_results: Dict[str, dict],
+        model_name: str,
+        train_lab_size: str,
+        test_size: str,
+        points: int,
+        noise: float,
+        save_path: Path = None) -> None:
     epochs = np.array(model_results["epoch"], dtype = np.int32)
     train_acc = np.array(model_results["train_acc"], dtype = np.float32)
     test_acc = np.array(model_results["test_acc"], dtype = np.float32)
@@ -127,13 +137,9 @@ def plot_accuracies(model_results: Dict[str, dict], save_name: Path = None) -> N
     ax.plot(epochs, 100 * train_acc, label = "train accuracy")
     ax.plot(epochs, 100 * test_acc, label = "test accuracy")
     ax.set_xlabel("Epoch")
-    ax.set_ylabel("Accuracy")
-    ax.set_title("Accuracies")
+    ax.set_ylabel("Accuracy [%]")
+    ax.set_title(f"{model_name} - {train_lab_size} train - {test_size} test")
     ax.legend()
-    if save_name is not None:
-        fig.set_size_inches(10, 8)
-        fig.set_dpi(1000)
-        fig.savefig(save_name)
 
 
 def plot_dec_bounds(
@@ -170,15 +176,3 @@ def plot_dec_bounds(
     ax.scatter(X[:, 0], X[:, 1], c=y, s=40, cmap=plt.cm.RdYlBu)
     ax.set_xlim(xx.min(), xx.max())
     ax.set_ylim(yy.min(), yy.max())
-
-if __name__ == "__main__":
-    model_results = {
-        "train_loss": range(10),
-        "train_acc": range(10),
-        "test_loss": range(10),
-        "test_acc": range(10),
-        "epoch": range(10)
-    }
-    plot_losses(model_results)
-    plot_accuracies(model_results)
-    plt.show()
