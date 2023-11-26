@@ -100,14 +100,7 @@ def load_model(name: str, model: torch.nn.Module, model_dir: Path) -> torch.nn.M
     return model
 
 
-def plot_losses(
-        model_results: Dict[str, dict],
-        model_name: str,
-        train_lab_size: str,
-        test_size: str,
-        points: int,
-        noise: float,
-        save_path: Path = None) -> None:
+def plot_losses(model_results: Dict[str, dict]) -> None:
     epochs = np.array(model_results["epoch"], dtype = np.int32)
     train_loss = np.array(model_results["train_loss"], dtype = np.float32)
     test_loss = np.array(model_results["test_loss"], dtype = np.float32)
@@ -117,18 +110,11 @@ def plot_losses(
     ax.plot(model_results["epoch"], 100 * test_loss, label = "test loss")
     ax.set_xlabel("Epoch")
     ax.set_ylabel("Loss")
-    ax.set_title(f"{model_name} - {train_lab_size} train - {test_size} test")
+    ax.set_title(f"Losses")
     ax.legend()
 
 
-def plot_accuracies(
-        model_results: Dict[str, dict],
-        model_name: str,
-        train_lab_size: str,
-        test_size: str,
-        points: int,
-        noise: float,
-        save_path: Path = None) -> None:
+def plot_accuracies(model_results: Dict[str, dict]) -> None:
     epochs = np.array(model_results["epoch"], dtype = np.int32)
     train_acc = np.array(model_results["train_acc"], dtype = np.float32)
     test_acc = np.array(model_results["test_acc"], dtype = np.float32)
@@ -138,7 +124,7 @@ def plot_accuracies(
     ax.plot(epochs, 100 * test_acc, label = "test accuracy")
     ax.set_xlabel("Epoch")
     ax.set_ylabel("Accuracy [%]")
-    ax.set_title(f"{model_name} - {train_lab_size} train - {test_size} test")
+    ax.set_title(f"Accuracies")
     ax.legend()
 
 

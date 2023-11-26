@@ -76,56 +76,41 @@ def parse_arguments() -> argparse.Namespace:
 
 if __name__ == "__main__":
     args = parse_arguments()
-    N_POINTS = args.n_points
-    NOISE = args.noise
-    TEST_SIZE = args.test_size
-    LABEL_SIZE = args.label_size
-    HIDDEN_SIZE = args.hidden_size
-    RESULTS_PATH = args.results_path
-    MODEL_NAME = args.model_name
-    EPOCHS = args.epochs
-    BATCH_SIZE = args.batch_size
-    LR = args.lr
-    NUM_WORKERS = args.num_workers
-    DEVICE = args.device
-    VERBOSE = args.verbose
-    TRACK_WANDB = args.track_wandb
-    RANDOM_STATE = args.random_state
-    torch.manual_seed(RANDOM_STATE)
+    torch.manual_seed(args.random_state)
 
     # start a new wandb run to track this script
     wandb.init(
         # set the wandb project where this run will be logged
         project="Moon Dataset Supervised Learning",
-        name = MODEL_NAME,
-        mode = TRACK_WANDB,
+        name = args.model_name,
+        mode = args.track_wandb,
         
         # track hyperparameters and run metadata
         config = {
-        "learning_rate": LR,
-        "test_size": TEST_SIZE,
-        "label_size": LABEL_SIZE,
-        "hidden_size": HIDDEN_SIZE,
-        "n_points": N_POINTS,
-        "noise": NOISE,
-        "architecture": f"{MODEL_NAME}-{HIDDEN_SIZE}x{HIDDEN_SIZE}x1",
+        "learning_rate": args.lr,
+        "test_size": args.test_size,
+        "label_size": args.label_size,
+        "hidden_size": args.hidden_size,
+        "n_points": args.n_points,
+        "noise": args.noise,
+        "architecture": f"{args.model_name}-{args.hidden_size}x{args.hidden_size}x1",
         "dataset": "Moon-Dataset-SKLearn",
-        "epochs": EPOCHS,
-        "batch_size": BATCH_SIZE,
-        "device": DEVICE
+        "epochs": args.epochs,
+        "batch_size": args.batch_size,
+        "device": args.device,
         }
     )
 
     # Get dataloaders
     train_lab_dataloader, train_unlab_dataloader, test_dataloader = data_setup.create_dataloaders(
-        n_samples = N_POINTS,
-        noise = NOISE,
-        test_size = TEST_SIZE,
-        label_size = LABEL_SIZE,
-        batch_size = BATCH_SIZE,
-        num_workers = NUM_WORKERS,
+        n_samples = args.n_points,
+        noise = args.noise,
+        test_size = args.test_size,
+        label_size = args.label_size,
+        batch_size = args.batch_size,
+        num_workers = args.num_workers,
         shuffle = True,
-        random_state = RANDOM_STATE
+        random_state = args.random_state
     )
     utils.print_data_sizes(
         train_lab_dataloader,
@@ -136,22 +121,22 @@ if __name__ == "__main__":
     # Create model, optimizer, and loss function
     model = model_builder.ModelV1(
         input_size = train_lab_dataloader.dataset.tensors[0].shape[1],
-        hidden_size = HIDDEN_SIZE
+        hidden_size = args.hidden_size
     )
-    optimizer = torch.optim.SGD(model.parameters(), lr = LR)
+    optimizer = torch.optim.SGD(model.parameters(), lr = args.lr)
     loss_fn = torch.nn.BCEWithLogitsLoss()
 
     # Train model
     results = engine.train(
         model = model,
-        model_name = MODEL_NAME,
+        model_name = args.model_name,
         train_dataloader = train_lab_dataloader,
         test_dataloader = test_dataloader,
         loss_fn = loss_fn,
         optimizer = optimizer,
-        epochs = EPOCHS,
-        device = DEVICE,
-        verbose = VERBOSE
+        epochs = args.epochs,
+        device = args.device,
+        verbose = args.verbose
     )
 
     # Plot results
@@ -159,5 +144,6 @@ if __name__ == "__main__":
     utils.plot_accuracies(results)
     utils.plot_dec_bounds(train_lab_dataloader, model)
     plt.show()
+
 
     wandb.finish()
