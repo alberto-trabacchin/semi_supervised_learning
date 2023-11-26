@@ -82,7 +82,7 @@ if __name__ == "__main__":
     wandb.init(
         # set the wandb project where this run will be logged
         project="Moon Dataset Supervised Learning",
-        name = args.model_name,
+        name = f"{args.model_name}",
         mode = args.track_wandb,
         
         # track hyperparameters and run metadata
@@ -136,6 +136,7 @@ if __name__ == "__main__":
     teacher_results = engine.train(
         model = teacher_model,
         model_name = args.model_name,
+        description = "Teacher",
         train_dataloader = train_lab_dataloader,
         test_dataloader = test_dataloader,
         loss_fn = loss_fn,
@@ -158,6 +159,7 @@ if __name__ == "__main__":
     student_results = engine.train(
         model = student_model,
         model_name = args.model_name,
+        description = "Student",
         train_dataloader = train_unlab_dataloader,
         test_dataloader = test_dataloader,
         loss_fn = loss_fn,
@@ -169,9 +171,40 @@ if __name__ == "__main__":
     )
 
     # Plot results
-    utils.plot_losses(teacher_results)
-    utils.plot_accuracies(teacher_results)
-    utils.plot_dec_bounds(train_lab_dataloader, teacher_model)
+    print("\nModels results:")
+    utils.print_models_results(model_name = f"{args.model_name}_Teacher", 
+                               model_results = teacher_results)
+    utils.print_models_results(model_name = f"{args.model_name}_Student",
+                               model_results = student_results)
+    utils.plot_losses(teacher_results, title = "Teacher Loss")
+    utils.plot_accuracies(teacher_results, title = "Teacher Accuracy")
+    utils.plot_dec_bounds(train_lab_dataloader, 
+                          teacher_model,
+                          pseudo_labels = None,
+                          title = "Teacher Train-Lab-Decision-Boundaries")
+    utils.plot_dec_bounds(train_unlab_dataloader, 
+                          teacher_model, 
+                          pseudo_labels = True,
+                          title = "Teacher Train-Unlab-Decision-Boundaries")
+    utils.plot_dec_bounds(test_dataloader, 
+                          teacher_model,
+                          pseudo_labels = None,
+                          title = "Teacher Test-Decision-Boundaries")
+    utils.plot_losses(student_results, title = "Student Loss")
+    utils.plot_accuracies(student_results, title = "Student Accuracy")
+    utils.plot_dec_bounds(train_unlab_dataloader, 
+                          student_model,
+                          pseudo_labels = False,
+                          title = "Student Train-Unlab-Decision-Boundaries(GT)")
+    utils.plot_dec_bounds(train_unlab_dataloader, 
+                          student_model,
+                          pseudo_labels = True,
+                          title = "Student Train-Unlab-Decision-Boundaries(PL)")
+    utils.plot_dec_bounds(test_dataloader, 
+                          teacher_model,
+                          pseudo_labels = None,
+                          title = "Student Test-Decision-Boundaries")
+    plt.tight_layout()
     plt.show()
 
     wandb.finish()

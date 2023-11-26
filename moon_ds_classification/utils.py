@@ -60,14 +60,13 @@ def make_table_train_results(
     return table
 
 
-def print_models_results(models_results: Dict[str, dict]) -> None:
+def print_models_results(model_name: str, model_results: Dict[str, dict]) -> None:
     table = PrettyTable(["Model Name", "Train Loss", "Train Accuracy", "Test Loss", "Test Accuracy"])
-    for model_name, model_result in models_results.items():
-        table.add_row([model_name,
-                       f"{model_result['train_loss'][-1] :.4f}",
-                       f"{100 * model_result['train_acc'][-1] :.2f}%",
-                       f"{model_result['test_loss'][-1] :.4f}",
-                       f"{100 * model_result['test_acc'][-1] :.2f}%"])
+    table.add_row([model_name,
+                   f"{model_results['train_loss'][-1] :.4f}",
+                   f"{100 * model_results['train_acc'][-1] :.2f}%",
+                   f"{model_results['test_loss'][-1] :.4f}",
+                   f"{100 * model_results['test_acc'][-1] :.2f}%"])
     print(table)
     
 
@@ -100,7 +99,7 @@ def load_model(name: str, model: torch.nn.Module, model_dir: Path) -> torch.nn.M
     return model
 
 
-def plot_losses(model_results: Dict[str, dict]) -> None:
+def plot_losses(model_results: Dict[str, dict], title: str = None) -> None:
     epochs = np.array(model_results["epoch"], dtype = np.int32)
     train_loss = np.array(model_results["train_loss"], dtype = np.float32)
     test_loss = np.array(model_results["test_loss"], dtype = np.float32)
@@ -110,11 +109,14 @@ def plot_losses(model_results: Dict[str, dict]) -> None:
     ax.plot(model_results["epoch"], 100 * test_loss, label = "test loss")
     ax.set_xlabel("Epoch")
     ax.set_ylabel("Loss")
-    ax.set_title(f"Losses")
+    if title is not None:
+        ax.set_title(title)
+    else:
+        ax.set_title(f"Losses")
     ax.legend()
 
 
-def plot_accuracies(model_results: Dict[str, dict]) -> None:
+def plot_accuracies(model_results: Dict[str, dict], title: str = None) -> None:
     epochs = np.array(model_results["epoch"], dtype = np.int32)
     train_acc = np.array(model_results["train_acc"], dtype = np.float32)
     test_acc = np.array(model_results["test_acc"], dtype = np.float32)
@@ -124,15 +126,27 @@ def plot_accuracies(model_results: Dict[str, dict]) -> None:
     ax.plot(epochs, 100 * test_acc, label = "test accuracy")
     ax.set_xlabel("Epoch")
     ax.set_ylabel("Accuracy [%]")
-    ax.set_title(f"Accuracies")
+    if title is not None:
+        ax.set_title(title)
+    else:
+        ax.set_title(f"Accuracies")
     ax.legend()
 
 
 def plot_dec_bounds(
         dataloader: DataLoader,
-        model: torch.nn.Module
+        model: torch.nn.Module,
+        pseudo_labels: bool,
+        title: str = None
 ) -> None:
-    X, y = dataloader.dataset.tensors
+    if pseudo_labels is None:
+        X, y = dataloader.dataset.tensors
+    elif pseudo_labels:
+        X = dataloader.dataset.data
+        y = dataloader.dataset.pseudo_targets
+    else:
+        X = dataloader.dataset.data
+        y = dataloader.dataset.targets
     model.to("cpu")
     X, y = X.to("cpu"), y.to("cpu")
 
@@ -162,3 +176,7 @@ def plot_dec_bounds(
     ax.scatter(X[:, 0], X[:, 1], c=y, s=40, cmap=plt.cm.RdYlBu)
     ax.set_xlim(xx.min(), xx.max())
     ax.set_ylim(yy.min(), yy.max())
+    if title is not None:
+        ax.set_title(title)
+    else:
+        ax.set_title("Decision Boundary")

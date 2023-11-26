@@ -102,6 +102,7 @@ def test_step(
 def train(
         model: torch.nn.Module,
         model_name: str,
+        description: str,
         train_dataloader: DataLoader,
         test_dataloader: DataLoader,
         loss_fn: torch.nn.Module,
@@ -176,7 +177,7 @@ def train(
         results["epoch"].append(epoch + 1)
         if verbose:
             results_table = utils.make_table_train_results(
-                model_name = model_name,
+                model_name = f"{model_name} - {description}",
                 epoch = epoch + 1,
                 train_loss = train_loss,
                 test_loss = test_loss,
@@ -184,10 +185,10 @@ def train(
                 test_acc = test_accuracy
             )
             tqdm.write(results_table.get_string())
-        wandb.log({f"Train Accuracy {model_name}": train_accuracy,
-                   f"Train Loss {model_name}": train_loss,
-                   f"Test Accuracy {model_name}": test_accuracy,
-                   f"Test Loss {model_name}": test_loss})
+        wandb.log({f"Train Accuracy {description}": train_accuracy,
+                   f"Train Loss {description}": train_loss,
+                   f"Test Accuracy {description}": test_accuracy,
+                   f"Test Loss {description}": test_loss})
     return results
 
 
