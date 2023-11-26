@@ -14,8 +14,7 @@ def train_step(
         data_loader: DataLoader,
         loss_fn: torch.nn.Module,
         optimizer: torch.optim.Optimizer,
-        device: torch.device,
-        pseudo_labels = None
+        device: torch.device
 ) -> Tuple[float, float]:
     """Trains a PyTorch model for a single epoch.
 
@@ -104,9 +103,7 @@ def train(
         optimizer: torch.optim.Optimizer,
         epochs: int,
         device: str,
-        track_online: bool = False,
-        verbose: bool = True,
-        pseudo_labels = None,
+        verbose: bool = True
 ) -> Dict[str, List[float]]:
     """Trains and tests a PyTorch model.
 
@@ -146,8 +143,6 @@ def train(
         "test_acc": [],
         "epoch": []
     }
-    if pseudo_labels is not None:
-        print("Pseudo-labels detected. Training with pseudo-labels.")
     train_accuracy = 0
     test_accuracy = 0
     train_loss = 0
@@ -159,8 +154,7 @@ def train(
             data_loader = train_dataloader,
             loss_fn = loss_fn,
             optimizer = optimizer,
-            device = device,
-            pseudo_labels = pseudo_labels
+            device = device
         )
         test_loss, test_accuracy = test_step(
             model = model,
@@ -183,11 +177,10 @@ def train(
                 test_acc = test_accuracy
             )
             tqdm.write(results_table.get_string())
-        if track_online:
-            wandb.log({f"Train Accuracy {model_name}": train_accuracy,
-                       f"Train Loss {model_name}": train_loss,
-                       f"Test Accuracy {model_name}": test_accuracy,
-                       f"Test Loss {model_name}": test_loss})
+        wandb.log({f"Train Accuracy {model_name}": train_accuracy,
+                   f"Train Loss {model_name}": train_loss,
+                   f"Test Accuracy {model_name}": test_accuracy,
+                   f"Test Loss {model_name}": test_loss})
     return results
 
 

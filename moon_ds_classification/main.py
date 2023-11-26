@@ -89,7 +89,7 @@ if __name__ == "__main__":
     NUM_WORKERS = args.num_workers
     DEVICE = args.device
     VERBOSE = args.verbose
-    TRACK_ONLINE = args.track_online
+    TRACK_WANDB = args.track_wandb
     RANDOM_STATE = args.random_state
     torch.manual_seed(RANDOM_STATE)
 
@@ -98,7 +98,7 @@ if __name__ == "__main__":
         # set the wandb project where this run will be logged
         project="Moon Dataset Supervised Learning",
         name = MODEL_NAME,
-        mode = "online" if TRACK_ONLINE else "disabled",
+        mode = TRACK_WANDB,
         
         # track hyperparameters and run metadata
         config = {
@@ -151,9 +151,7 @@ if __name__ == "__main__":
         optimizer = optimizer,
         epochs = EPOCHS,
         device = DEVICE,
-        verbose = VERBOSE,
-        track_online = TRACK_ONLINE,
-        pseudo_labels = None
+        verbose = VERBOSE
     )
 
     # Plot results
