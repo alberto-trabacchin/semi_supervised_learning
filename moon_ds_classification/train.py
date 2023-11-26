@@ -118,32 +118,60 @@ if __name__ == "__main__":
         test_dataloader
     )
 
-    # Create model, optimizer, and loss function
-    model = model_builder.ModelV1(
+    # Create models, optimizers, and loss function
+    teacher_model = model_builder.ModelV1(
         input_size = train_lab_dataloader.dataset.tensors[0].shape[1],
         hidden_size = args.hidden_size
     )
-    optimizer = torch.optim.SGD(model.parameters(), lr = args.lr)
+    student_model = model_builder.ModelV1(
+        input_size = train_lab_dataloader.dataset.tensors[0].shape[1],
+        hidden_size = args.hidden_size
+    )
+    teacher_optimizer = torch.optim.SGD(teacher_model.parameters(), lr = args.lr)
+    student_optimizer = torch.optim.SGD(student_model.parameters(), lr = args.lr)
     loss_fn = torch.nn.BCEWithLogitsLoss()
 
-    # Train model
-    results = engine.train(
-        model = model,
+    # Train the teacher
+    print("\nTraining teacher...")
+    teacher_results = engine.train(
+        model = teacher_model,
         model_name = args.model_name,
         train_dataloader = train_lab_dataloader,
         test_dataloader = test_dataloader,
         loss_fn = loss_fn,
-        optimizer = optimizer,
+        optimizer = teacher_optimizer,
         epochs = args.epochs,
         device = args.device,
-        verbose = args.verbose
+        verbose = args.verbose,
+        pseudo_labels = False
+    )
+
+    # Predict pseudo-labels and update the unlabeled dataloader
+    engine.predict_pseudo_labels(
+        model = teacher_model,
+        data_loader = train_unlab_dataloader,
+        device = args.device
+    )
+
+    # Train the student
+    print("\nTraining student...")
+    student_results = engine.train(
+        model = student_model,
+        model_name = args.model_name,
+        train_dataloader = train_unlab_dataloader,
+        test_dataloader = test_dataloader,
+        loss_fn = loss_fn,
+        optimizer = student_optimizer,
+        epochs = args.epochs,
+        device = args.device,
+        verbose = args.verbose,
+        pseudo_labels = True
     )
 
     # Plot results
-    utils.plot_losses(results)
-    utils.plot_accuracies(results)
-    utils.plot_dec_bounds(train_lab_dataloader, model)
+    utils.plot_losses(teacher_results)
+    utils.plot_accuracies(teacher_results)
+    utils.plot_dec_bounds(train_lab_dataloader, teacher_model)
     plt.show()
-
 
     wandb.finish()

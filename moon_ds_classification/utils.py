@@ -15,9 +15,9 @@ def print_data_sizes(
         train_unlab_dataloader: DataLoader,
         test_dataloader: DataLoader
 ) -> None:
-    train_lab_size = train_lab_dataloader.dataset.tensors[0].shape[0]
-    train_unlab_size = train_unlab_dataloader.dataset.tensors[0].shape[0]
-    test_size = test_dataloader.dataset.tensors[0].shape[0]
+    train_lab_size = len(train_lab_dataloader.dataset)
+    train_unlab_size = len(train_unlab_dataloader.dataset)
+    test_size = len(test_dataloader.dataset)
     print(f"Training labeled size: {train_lab_size}")
     print(f"Training unlabeled size: {train_unlab_size}")
     print(f"Testing size: {test_size}")

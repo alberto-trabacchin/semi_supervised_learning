@@ -14,7 +14,8 @@ def train_step(
         data_loader: DataLoader,
         loss_fn: torch.nn.Module,
         optimizer: torch.optim.Optimizer,
-        device: torch.device
+        device: torch.device,
+        pseudo_labels: bool
 ) -> Tuple[float, float]:
     """Trains a PyTorch model for a single epoch.
 
@@ -38,8 +39,12 @@ def train_step(
     model.train()
     train_loss = 0
     train_accuracy = 0
-    for i, batch_sample in enumerate(data_loader):
-        X, y = batch_sample
+    for batch_idx, batch_sample in enumerate(data_loader):
+        if pseudo_labels:
+            X, y, pseudo_y, idx = batch_sample
+            y = pseudo_y
+        else:
+            X, y = batch_sample
         X, y = X.to(device), y.to(device)
         y_logits = model(X).squeeze()
         y_pred = torch.round(torch.sigmoid(y_logits))
@@ -103,6 +108,7 @@ def train(
         optimizer: torch.optim.Optimizer,
         epochs: int,
         device: str,
+        pseudo_labels: bool,
         verbose: bool = True
 ) -> Dict[str, List[float]]:
     """Trains and tests a PyTorch model.
@@ -154,7 +160,8 @@ def train(
             data_loader = train_dataloader,
             loss_fn = loss_fn,
             optimizer = optimizer,
-            device = device
+            device = device,
+            pseudo_labels = pseudo_labels
         )
         test_loss, test_accuracy = test_step(
             model = model,
@@ -184,7 +191,7 @@ def train(
     return results
 
 
-def get_pseudo_labels(
+def predict_pseudo_labels(
         model: torch.nn.Module,
         data_loader: DataLoader,
         device: torch.device
@@ -203,12 +210,11 @@ def get_pseudo_labels(
         A tensor of predictions from the model.
     """
     model.eval()
-    predictions = []
     with torch.inference_mode():
-        for i, batch_sample in enumerate(data_loader):
-            X, _ = batch_sample
+        for batch_idx, batch_sample in enumerate(data_loader):
+            X, _, _, idx = batch_sample
             X = X.to(device)
             y_logits = model(X)
             y_pred = torch.round(torch.sigmoid(y_logits))
-            predictions.append(y_pred.to("cpu"))
-    return predictions
+            y_pred = y_pred.squeeze().to("cpu")
+            data_loader.dataset.pseudo_targets[idx] = y_pred

@@ -1,11 +1,27 @@
-from pathlib import Path
-from torchvision import datasets, transforms
-from torch.utils.data import DataLoader, random_split
+from torch.utils.data import DataLoader, TensorDataset, Dataset
 import torch
 from typing import Tuple, List
 import os
 from sklearn.model_selection import train_test_split
 from sklearn.datasets import make_moons
+
+
+class PseudoDataset(Dataset):
+    def __init__(self, data: torch.Tensor, targets: torch.Tensor):
+        self.data = data
+        self.targets = targets
+        self.pseudo_targets = torch.empty_like(self.targets)
+
+    def __getitem__(self, index):
+        return (
+            self.data[index],
+            self.targets[index],
+            self.pseudo_targets[index],
+            index
+        )
+
+    def __len__(self):
+        return self.data.size(0)
 
 
 def create_dataloaders(
@@ -68,10 +84,10 @@ def create_dataloaders(
     y_train_lab = torch.FloatTensor(y_train_lab)
     y_test = torch.FloatTensor(y_test)
 
-    # Convert to PyTorch datasets
-    train_unlab_dataset = torch.utils.data.TensorDataset(X_train_unlab, y_train_unlab)
-    train_lab_dataset = torch.utils.data.TensorDataset(X_train_lab, y_train_lab)
-    test_dataset = torch.utils.data.TensorDataset(X_test, y_test)
+    # Convert to PyTorch datasets 
+    train_lab_dataset = TensorDataset(X_train_lab, y_train_lab)
+    test_dataset = TensorDataset(X_test, y_test)
+    train_unlab_dataset = PseudoDataset(X_train_unlab, y_train_unlab)
     
     # Create dataloaders from PyTorch datasets
     train_lab_dataloader = DataLoader(dataset = train_lab_dataset,
@@ -86,5 +102,4 @@ def create_dataloaders(
                                  batch_size = batch_size,
                                  shuffle = shuffle,
                                  num_workers = num_workers)
-    
     return train_lab_dataloader, train_unlab_dataloader, test_dataloader
