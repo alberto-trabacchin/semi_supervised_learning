@@ -151,12 +151,18 @@ if __name__ == "__main__":
         pseudo_labels = False
     )
 
+    engine.predict_pseudo_labels(
+        model = teacher_model,
+        data_loader = train_unlab_dl,
+        device = args.device
+    )
+
     student_results = engine.train(
         model = student_model,
         train_dataloader = train_unlab_dl,
         test_dataloader = test_dl,
         loss_fn = torch.nn.CrossEntropyLoss(),
-        optimizer = torch.optim.Adam(teacher_model.parameters(), lr = args.lr),
+        optimizer = torch.optim.Adam(student_model.parameters(), lr = args.lr),
         device = args.device,
         epochs = args.epochs,
         verbose = args.verbose,

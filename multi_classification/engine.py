@@ -214,6 +214,5 @@ def predict_pseudo_labels(
             X, _, _, idx = batch_sample
             X = X.to(device)
             y_logits = model(X)
-            y_pred = torch.round(torch.sigmoid(y_logits))
-            y_pred = y_pred.squeeze().to("cpu")
+            y_pred = torch.softmax(y_logits, dim = 1).argmax(dim = 1).to("cpu")
             data_loader.dataset.pseudo_targets[idx] = y_pred
