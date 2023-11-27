@@ -109,6 +109,7 @@ if __name__ == "__main__":
         }
     )
 
+    # Generate dataloaders
     train_lab_dl, train_unlab_dl, test_dl = data_setup.create_dataloaders(
         n_samples = args.n_samples,
         n_features = args.n_features,
@@ -126,6 +127,7 @@ if __name__ == "__main__":
         test_dl
     )
 
+    # Create models
     teacher_model = model_builder.ModelV1(
         input_size = args.n_features, 
         hidden_size = args.hidden_size,
@@ -137,6 +139,7 @@ if __name__ == "__main__":
         output_size = args.n_classes
     )
 
+    # Train teacher
     teacher_results = engine.train(
         model = teacher_model,
         train_dataloader = train_lab_dl,
@@ -151,12 +154,14 @@ if __name__ == "__main__":
         pseudo_labels = False
     )
 
+    # Generate pseudo labels
     engine.predict_pseudo_labels(
         model = teacher_model,
         data_loader = train_unlab_dl,
         device = args.device
     )
 
+    # Train student
     student_results = engine.train(
         model = student_model,
         train_dataloader = train_unlab_dl,
