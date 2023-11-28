@@ -45,7 +45,11 @@ def parse_arguments() -> argparse.Namespace:
                         type = str, 
                         required = True, 
                         help = "Name of model to train")
-    parser.add_argument("--epochs", 
+    parser.add_argument("--teacher_epochs", 
+                        type = int, 
+                        default = 100, 
+                        help = "Number of epochs to train the model for")
+    parser.add_argument("--student_epochs", 
                         type = int, 
                         default = 100, 
                         help = "Number of epochs to train the model for")
@@ -103,7 +107,8 @@ if __name__ == "__main__":
         "noise": args.noise,
         "architecture": f"{args.model_name}-{args.hidden_size}x{args.hidden_size}x1",
         "dataset": "Moon-Dataset-SKLearn",
-        "epochs": args.epochs,
+        "teacher_epochs": args.teacher_epochs,
+        "student_epochs": args.student_epochs,
         "batch_size": args.batch_size,
         "device": args.device,
         }
@@ -147,7 +152,7 @@ if __name__ == "__main__":
         loss_fn = torch.nn.CrossEntropyLoss(),
         optimizer = torch.optim.Adam(teacher_model.parameters(), lr = args.lr),
         device = args.device,
-        epochs = args.epochs,
+        epochs = args.teacher_epochs,
         verbose = args.verbose,
         model_name = args.model_name,
         description = "Teacher",
@@ -169,7 +174,7 @@ if __name__ == "__main__":
         loss_fn = torch.nn.CrossEntropyLoss(),
         optimizer = torch.optim.Adam(student_model.parameters(), lr = args.lr),
         device = args.device,
-        epochs = args.epochs,
+        epochs = args.student_epochs,
         verbose = args.verbose,
         model_name = args.model_name,
         description = "Student",
